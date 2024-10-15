@@ -1,5 +1,3 @@
-'use strict';
-
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
 // BANKIST APP
@@ -103,7 +101,6 @@ const formatCur = function (value, locale, currency) {
 
 const displayMovements = function (acc, sort = false) {
   containerMovements.innerHTML = '';
-  console.log(acc.movements);
   const movs = sort
     ? acc.movements.slice().sort((a, b) => a - b)
     : acc.movements;
@@ -263,6 +260,7 @@ btnLogin.addEventListener('click', function (e) {
 });
 
 btnTransfer.addEventListener('click', function (e) {
+  const begin = performance.now();
   e.preventDefault();
   const amount = Number(inputTransferAmount.value);
   const receiverAcc = accounts.find(
@@ -271,26 +269,29 @@ btnTransfer.addEventListener('click', function (e) {
   inputTransferAmount.value = inputTransferTo.value = '';
 
   if (
-    amount > 0 &&
-    receiverAcc &&
-    currentAccount.balance >= amount &&
-    receiverAcc?.username !== currentAccount.username
-  ) {
-    // Doing the transfer
-    currentAccount.movements.push(-amount);
-    receiverAcc.movements.push(amount);
+    amount <= 0 ||
+    !receiverAcc ||
+    currentAccount.balance < amount ||
+    receiverAcc.username === currentAccount.username
+  )
+    return;
 
-    // Add transfer date
+  // Doing the transfer
+  currentAccount.movements.push(-amount);
+  receiverAcc.movements.push(amount);
 
-    currentAccount.movementsDates.push(new Date().toISOString());
-    receiverAcc.movementsDates.push(new Date().toISOString());
+  // Add transfer date
 
-    // Update UI
-    updateUI(currentAccount);
+  currentAccount.movementsDates.push(new Date().toISOString());
+  receiverAcc.movementsDates.push(new Date().toISOString());
 
-    clearInterval(timer);
-    timer = startLogOutTimer();
-  }
+  // Update UI
+  updateUI(currentAccount);
+
+  clearInterval(timer);
+  timer = startLogOutTimer();
+  const end = performance.now();
+  console.log(end - begin);
 });
 
 btnLoan.addEventListener('click', function (e) {
